@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>벨소리 + 게임 앱</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #141e30, #243b55);
+    color: white;
+    text-align: center;
+}
+
+h1 { padding: 15px; }
+
+.top-btn {
+    padding: 10px 20px;
+    background: #ff5722;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+}
+
+.container {
+    display: flex;
+    height: 60vh;
+}
+
+.player {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 6px;
+    background: #2196f3;
+    color: white;
+    cursor: pointer;
+}
+
+.slider { width: 70%; }
+
+#gameScreen { display: none; }
+
+#gameArea {
+    width: 300px;
+    height: 300px;
+    background: #000;
+    margin: 20px auto;
+    position: relative;
+    border-radius: 10px;
+}
+
+#target {
+    width: 40px;
+    height: 40px;
+    background: red;
+    position: absolute;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+select {
+    padding: 5px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>🎧 벨소리 비교 앱</h1>
+<button class="top-btn" onclick="openGame()">🎮 미니게임</button>
+
+<!-- 🎧 음악 -->
+<div id="musicScreen">
+<div class="container">
+
+<div class="player">
+<h2>📱 노트 FE</h2>
+<button onclick="playFE()">▶ 재생</button>
+<button onclick="pauseFE()">⏸ 정지</button>
+<input type="range" class="slider" min="0" max="1" step="0.01"
+oninput="audio1.volume=this.value">
+</div>
+
+<div class="player">
+<h2>🔥 노트7</h2>
+<button onclick="playN7()">▶ 재생</button>
+<button onclick="pauseN7()">⏸ 정지</button>
+<input type="range" class="slider" min="0" max="1" step="0.01"
+oninput="audio2.volume=this.value">
+</div>
+
+</div>
+</div>
+
+<!-- 🎮 게임 -->
+<div id="gameScreen">
+<h1>🎯 클릭 게임</h1>
+<button onclick="closeGame()">⬅ 돌아가기</button>
+
+<p>
+난이도:
+<select id="difficulty">
+<option value="1000">쉬움</option>
+<option value="700" selected>보통</option>
+<option value="400">어려움</option>
+</select>
+</p>
+
+<p>
+점수: <span id="score">0</span> |
+최고점수: <span id="best">0</span> |
+시간: <span id="time">10</span>
+</p>
+
+<button onclick="startGame()">게임 시작</button>
+
+<div id="gameArea">
+<div id="target"></div>
+</div>
+</div>
+
+<script>
+// 🎧 오디오
+const audio1 = new Audio("over_the_horizon_s8.mp3");
+const audio2 = new Audio("over_the_horizon_2016.mp3");
+
+function playFE() { audio2.pause(); audio1.currentTime=0; audio1.play(); }
+function pauseFE() { audio1.pause(); }
+function playN7() { audio1.pause(); audio2.currentTime=0; audio2.play(); }
+function pauseN7() { audio2.pause(); }
+
+// 화면 전환
+function openGame(){
+document.getElementById("musicScreen").style.display="none";
+document.getElementById("gameScreen").style.display="block";
+loadBest();
+}
+function closeGame(){
+document.getElementById("gameScreen").style.display="none";
+document.getElementById("musicScreen").style.display="block";
+}
+
+// 🎮 게임
+let score=0, time=10, gameInterval, moveInterval;
+const target=document.getElementById("target");
+
+function moveTarget(){
+const x=Math.random()*260;
+const y=Math.random()*260;
+target.style.left=x+"px";
+target.style.top=y+"px";
+}
+
+// 클릭 성공
+target.onclick=function(e){
+e.stopPropagation();
+score++;
+document.getElementById("score").innerText=score;
+moveTarget();
+}
+
+// 빗맞추면 감점
+document.getElementById("gameArea").onclick=function(){
+score--;
+document.getElementById("score").innerText=score;
+}
+
+function startGame(){
+score=0; time=10;
+document.getElementById("score").innerText=score;
+document.getElementById("time").innerText=time;
+
+let speed=document.getElementById("difficulty").value;
+
+moveTarget();
+
+moveInterval=setInterval(moveTarget, speed);
+
+gameInterval=setInterval(()=>{
+time--;
+document.getElementById("time").innerText=time;
+
+if(time<=0){
+clearInterval(gameInterval);
+clearInterval(moveInterval);
+saveBest(score);
+alert("게임 끝! 점수: "+score);
+}
+},1000);
+}
+
+// 🏆 최고점수 저장
+function saveBest(s){
+let best=localStorage.getItem("bestScore")||0;
+if(s>best){
+localStorage.setItem("bestScore", s);
+}
+loadBest();
+}
+
+function loadBest(){
+document.getElementById("best").innerText=
+localStorage.getItem("bestScore")||0;
+}
+</script>
+
+</body>
+</html>
